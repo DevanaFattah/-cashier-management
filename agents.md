@@ -167,6 +167,85 @@ Themes are configured in `config/themes.php` and loaded dynamically via the shop
 
 ---
 
+## 🔄 Rencana Dekopling (Decoupling): Backend API & Frontend Blade (Hybrid Monolith)
+
+### 📌 Latar Belakang & Konsep
+Saat ini, aplikasi dikembangkan menggunakan konsep **Monolit Tradisional** di mana logika backend (Controller, Database Query, Model) sangat terikat (tightly coupled) dengan file presentasi (Laravel Blade). Data dilewatkan langsung dari Controller ke Blade saat routing halaman terjadi (server-side rendering dengan data binding langsung).
+
+**Tujuan Baru:**
+Kita ingin memisahkan backend dan frontend secara bertahap (decouple):
+1. **Backend sebagai API:** Backend Laravel akan berfungsi sebagai REST API. Semua transaksi data, query produk, pembaruan pengaturan, dan autentikasi akan diproses melalui JSON API endpoints.
+2. **Frontend menggunakan Blade (sebagai shell/halaman):** Kita tetap menggunakan Laravel Blade untuk merender struktur halaman (HTML/CSS) dan menangani routing halaman utama. Namun, Blade tidak akan menerima/memproses data mentah langsung dari Controller backend (tidak ada injeksi variabel model langsung secara server-side).
+3. **Data Fetching via Client-side:** Halaman Blade akan menggunakan JavaScript (Alpine.js dengan Fetch API / Axios) untuk memanggil API backend secara asynchronous, mengambil data dalam format JSON, dan mengikatnya ke UI secara dinamis (dynamic UI binding).
+
+---
+
+### 🗺️ Rencana Implementasi Bertahap (Gradual Migration Plan)
+
+Ikuti langkah-langkah terstruktur berikut untuk mengimplementasikan arsitektur baru ini tanpa merusak fungsionalitas yang ada:
+
+#### Langkah 1: Registrasi dan Pembuatan API Routes (`routes/api.php`)
+- Pindahkan atau buat ulang route-route transaksi, produk, dan pengaturan ke `routes/api.php`.
+- Contoh API endpoints yang harus tersedia:
+  - `GET /api/products` (pencarian dan daftar produk)
+  - `POST /api/transactions` (checkout transaksi)
+  - `GET /api/transactions` (riwayat transaksi)
+  - `GET /api/settings` (mengambil tema aktif dan informasi toko)
+  - `PUT /api/settings` (mengubah informasi toko atau tema)
+
+#### Langkah 2: Standarisasi API Response
+- Buat agar semua Controller API baru mengembalikan response JSON yang seragam.
+- Format response yang disarankan:
+  ```json
+  {
+      "success": true,
+      "message": "Data berhasil diambil/disimpan",
+      "data": { ... }
+  }
+  ```
+
+#### Langkah 3: Refaktorisasi Controller Web (Hanya Merender Blade Kosong/Shell)
+- Ubah Web Controller di `routes/web.php` agar hanya mengembalikan view Blade kosong tanpa data database, misalnya:
+  ```php
+  // SEBELUMNYA (Monolit):
+  public function index() {
+      $products = Product::all();
+      return view('cashier', compact('products'));
+  }
+
+  // SESUDAHNYA (Decoupled):
+  public function index() {
+      return view('cashier'); // Blade kosong/shell, tidak mengirim variabel $products
+  }
+  ```
+
+#### Langkah 4: Hubungkan Blade dengan API menggunakan Alpine.js / Fetch API
+- Di dalam file Blade (seperti `cashier.blade.php`), gunakan directive Alpine.js `x-init` atau lifecycle hook lainnya untuk mengambil data secara asynchronous dari API endpoint saat halaman dimuat.
+- Contoh manipulasi data pada Blade:
+  ```javascript
+  document.addEventListener('alpine:init', () => {
+      Alpine.data('cashierData', () => ({
+          products: [],
+          async init() {
+              let response = await fetch('/api/products');
+              let result = await response.json();
+              if (result.success) {
+                  this.products = result.data;
+              }
+          }
+      }));
+  });
+  ```
+
+#### Langkah 5: Penyesuaian Fitur Cetak Receipt (DomPDF)
+- PDF Receipt (Thermal/A4) tetap dirender di backend menggunakan DomPDF, tetapi pemanggilannya dipicu oleh frontend setelah API `POST /api/transactions` sukses mengembalikan ID transaksi baru.
+- Alur cetak:
+  1. Frontend mengirim data belanja ke `POST /api/transactions` via AJAX.
+  2. Backend menyimpan data ke database dan mengembalikan JSON: `{ "success": true, "transaction_id": 123 }`.
+  3. Frontend menerima JSON tersebut, lalu membuka tab baru ke URL cetak PDF (misalnya `/transactions/123/receipt`) untuk langsung menampilkan/mencetak PDF.
+
+---
+
 ## 🎨 UI Design & Aesthetic Guidelines
 1. **Glassmorphism & Rich Styling:** Use curated harmonized color systems (HSL tailored) utilizing the dynamic `--primary` configuration.
 2. **Typography:** Use modern premium fonts (e.g. Plus Jakarta Sans or DM Sans) for system operations.
