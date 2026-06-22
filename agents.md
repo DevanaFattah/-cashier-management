@@ -258,3 +258,137 @@ Ikuti langkah-langkah terstruktur berikut untuk mengimplementasikan arsitektur b
 2. **Db Refresh and Seed Validation:** Ensure that running `php artisan migrate:fresh --seed` runs to completion without errors and inserts all necessary shop settings, default products, transactions, and details.
 3. **Dynamic Theme Switch Verification:** Navigate to Settings, update the theme, and confirm that the primary UI colors, sidebar active states, and receipt layout headings match the selected color palette immediately without caching issues.
 4. **PDF Output Inspection:** Confirm receipt PDFs correctly show the customized logo, the newly modified address, and the updated shop name.
+
+---
+
+## 👥 Role-Based Access Control (RBAC) Plan
+
+### 📌 Overview
+Aplikasi ini akan memiliki tiga peran (role) pengguna yang memiliki hak akses berbeda terhadap halaman dan fitur yang tersedia. Role disimpan langsung di tabel `users` (kolom `role`) dan dikontrol menggunakan Laravel Middleware.
+
+---
+
+### 🗂️ Role Definitions & Access Matrix
+
+| Halaman / Modul                    | `kasir` | `owner` | `superadmin` |
+|------------------------------------|:-------:|:-------:|:------------:|
+| Dashboard Kasir (`/cashier/dashboard`) | ✅      | ❌      | ✅           |
+| Dashboard Utama (`/dashboard`)     | ❌      | ✅      | ✅           |
+| Halaman Kasir / POS (`/cashier`)   | ✅      | ❌      | ✅           |
+| Manajemen Produk (`/products`)     | ✅      | ❌      | ✅           |
+| Riwayat Transaksi (`/transactions`)| ✅      | ❌      | ✅           |
+| Pengaturan (`/settings`)           | ❌      | ✅      | ✅           |
+| Manajemen User (`/users`)          | ❌      | ❌      | ✅           |
+
+---
+
+### 🗃️ Perubahan Database Schema
+
+#### Tabel `users` — Tambah Kolom `role`
+```sql
+ALTER TABLE users ADD COLUMN role ENUM('kasir', 'owner', 'superadmin') NOT NULL DEFAULT 'kasir';
+```
+- Nilai default: `kasir` (paling terbatas).
+- Hanya `superadmin` yang bisa mengelola user dan mengubah role.
+- Kolom ini ditambahkan via Laravel Migration baru (`add_role_to_users_table`).
+
+---
+
+### 🔐 Implementasi Middleware
+
+#### Middleware Baru: `CheckRole`
+- Lokasi: `app/Http/Middleware/CheckRole.php`
+- Cara kerja: Middleware ini menerima satu atau lebih role yang diizinkan sebagai parameter, lalu membandingkan dengan `auth()->user()->role`. Jika tidak cocok, pengguna di-redirect ke halaman yang sesuai dengan role mereka (bukan halaman 403 generik).
+- Registrasi: Daftarkan alias `role` di `bootstrap/app.php` atau `app/Http/Kernel.php`.
+
+Contoh penggunaan di `routes/web.php`:
+```php
+// Hanya kasir & superadmin
+Route::middleware(['auth', 'role:kasir,superadmin'])->group(function () {
+    Route::get('/cashier', ...);
+    Route::get('/products', ...);
+    Route::get('/transactions', ...);
+    Route::get('/cashier/dashboard', ...);
+});
+
+// Hanya owner & superadmin
+Route::middleware(['auth', 'role:owner,superadmin'])->group(function () {
+    Route::get('/dashboard', ...);
+    Route::get('/settings', ...);
+});
+
+// Hanya superadmin
+Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('/users', ...);
+});
+```
+
+---
+
+### 🏠 Redirect Setelah Login (Role-Based Landing Page)
+
+Setelah login berhasil, pengguna harus diarahkan ke halaman yang sesuai dengan role-nya:
+
+| Role          | Redirect URL          |
+|---------------|-----------------------|
+| `kasir`       | `/cashier/dashboard`    |
+| `owner`       | `/dashboard`          |
+| `superadmin`  | `/dashboard`          |
+
+Implementasi: Override method `redirectTo()` atau `authenticated()` di `LoginController`, atau gunakan middleware `RedirectIfAuthenticated` yang sudah ada.
+
+---
+
+### 📊 Dashboard Kasir (`/kasir/dashboard`)
+
+Dashboard khusus kasir yang hanya menampilkan data yang relevan dengan aktivitas kasir itu sendiri (bukan data toko global). Semua data diambil via API (`/api/kasir/stats`) menggunakan Alpine.js — mengikuti pola Hybrid Monolith yang sudah ada.
+
+#### Data yang Ditampilkan:
+1. **Total Transaksi Hari Ini** — Jumlah transaksi yang dibuat oleh kasir yang sedang login pada hari ini.
+2. **Total Pendapatan Hari Ini** — Jumlah `grand_total` dari transaksi kasir hari ini.
+3. **Transaksi Terakhir** — Daftar 5 transaksi terakhir yang dilakukan oleh kasir yang sedang login.
+4. **Produk Paling Sering Dijual (oleh kasir ini)** — Top 3 produk berdasarkan `qty` di `transaction_details` yang berelasi ke transaksi milik kasir ini.
+
+#### API Endpoint yang Dibutuhkan:
+- `GET /api/cashier/stats` — Mengembalikan semua data di atas, di-filter berdasarkan `user_id` yang sedang login.
+
+#### Catatan Penting:
+- Dashboard kasir **tidak** menampilkan total revenue seluruh toko, total produk aktif, atau data global lainnya — itu hak dashboard `owner`/`superadmin`.
+- Filter data menggunakan `where('user_id', auth()->id())` pada query transaksi.
+
+---
+
+### 🧑‍💻 Manajemen User (Superadmin Only)
+
+Halaman `/users` hanya bisa diakses oleh `superadmin`. Fitur yang tersedia:
+- [ ] Melihat daftar semua pengguna beserta role-nya.
+- [ ] Membuat pengguna baru dengan role tertentu.
+- [ ] Mengubah role pengguna yang sudah ada.
+- [ ] Menonaktifkan/menghapus pengguna.
+
+---
+
+### 🌱 Seeder Updates
+
+`DatabaseSeeder.php` harus diperbarui untuk membuat setidaknya satu akun untuk setiap role:
+```php
+// Contoh data seed:
+['name' => 'Super Admin',  'email' => 'superadmin@kasir.app', 'role' => 'superadmin']
+['name' => 'Owner Toko',   'email' => 'owner@kasir.app',      'role' => 'owner']
+['name' => 'Kasir 1',      'email' => 'kasir@kasir.app',      'role' => 'kasir']
+```
+
+---
+
+### ✅ Urutan Implementasi yang Disarankan
+
+1. Buat migration baru: `add_role_to_users_table` — tambah kolom `role`.
+2. Update `DatabaseSeeder.php` — tambah role ke seed user.
+3. Buat middleware `CheckRole` dan daftarkan alias `role`.
+4. Update `routes/web.php` — bungkus semua route dengan middleware `role`.
+5. Update `LoginController` / `AuthenticatedSessionController` — redirect berdasarkan role setelah login.
+6. Buat halaman shell Blade untuk dashboard kasir (`/cashier/dashboard`).
+7. Buat API endpoint `GET /api/kasir/stats` di `ApiController`.
+8. Implementasi Alpine.js data-fetching di Blade dashboard kasir.
+9. Update seeder dan jalankan `php artisan migrate:fresh --seed` untuk verifikasi.
+10. Uji setiap role secara manual: login, akses halaman yang diizinkan, coba akses yang dilarang.

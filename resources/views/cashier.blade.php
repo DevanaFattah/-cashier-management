@@ -6,13 +6,25 @@
             Alpine.data('cashierApp', () => ({
                 codeInput: '',
                 cart: [],
-                products: window.__products__ || [],
+                products: [],
                 showPayModal: false,
                 paymentAmount: '',
                 paymentMethod: 'cash',
                 paymentDone: false,
                 savedTrxId: null,
                 csrfToken: window.__csrf__,
+
+                async init() {
+                    try {
+                        const res = await fetch('/api/products');
+                        const json = await res.json();
+                        if (json.success) {
+                            this.products = json.data;
+                        }
+                    } catch (e) {
+                        console.error('Gagal mengambil data produk:', e);
+                    }
+                },
 
                 get total() {
                     return this.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
@@ -30,9 +42,9 @@
                     if (!this.codeInput.trim()) return;
                     const q = this.codeInput.trim().toLowerCase();
                     const p = this.products.find(p =>
-                        p.code.replace('#', '').toLowerCase() === q ||
-                        p.code.toLowerCase() === ('#' + q) ||
-                        p.name.toLowerCase().includes(q)
+                         p.code.replace('#', '').toLowerCase() === q ||
+                         p.code.toLowerCase() === ('#' + q) ||
+                         p.name.toLowerCase().includes(q)
                     );
                     if (!p) { alert('Produk tidak ditemukan!'); this.codeInput = ''; return; }
                     this.addProduct(p);
@@ -64,7 +76,7 @@
                     const isNonCash = ['qris', 'debit'].includes(this.paymentMethod);
                     if (!isNonCash && (!this.paymentAmount || Number(this.paymentAmount) < this.total)) return;
                     try {
-                        const response = await fetch('/transactions', {
+                        const response = await fetch('/api/transactions', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -97,9 +109,11 @@
                             window.snap.pay(data.snap_token, {
                                 onSuccess: (result) => {
                                     this.paymentDone = true;
+                                    this.finishTransaction();
                                 },
                                 onPending: (result) => {
                                     this.paymentDone = true;
+                                    this.finishTransaction();
                                 },
                                 onError: (result) => {
                                     alert('Pembayaran gagal: ' + result.status_message);
@@ -111,6 +125,11 @@
                         } else {
                             // Cash payment
                             this.paymentDone = true;
+                            // Update local product stocks based on cart quantities
+                            this.cart.forEach(item => {
+                                const prod = this.products.find(p => p.id === item.id);
+                                if (prod) prod.stock -= item.qty;
+                            });
                         }
                     } catch (err) {
                         console.error('Payment Error:', err);
@@ -128,9 +147,8 @@
         });
     </script>
 
-    {{-- Inject server-side data safely --}}
+    {{-- Inject CSRF token safely --}}
     <script>
-        window.__products__ = @json($products);
         window.__csrf__ = window.__csrf__ || '{{ csrf_token() }}';
     </script>
 

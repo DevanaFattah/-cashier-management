@@ -21,17 +21,24 @@ class DatabaseSeeder extends Seeder
         // User::factory(11)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Super Admin',
+            'email' => 'superadmin@kasir.app',
             'shop_id' => '1',
-            'roles' => 'superadmin'
+            'role' => 'superadmin'
         ]);
 
         User::factory()->create([
-            'name' => 'Cashier User',
-            'email' => 'cashier@example.com',
+            'name' => 'Owner Toko',
+            'email' => 'owner@kasir.app',
             'shop_id' => '1',
-            'roles' => 'cashier'
+            'role' => 'owner'
+        ]);
+
+        User::factory()->create([
+            'name' => 'Kasir 1',
+            'email' => 'kasir@kasir.app',
+            'shop_id' => '1',
+            'role' => 'kasir'
         ]);
 
         Setting::create([

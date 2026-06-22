@@ -8,9 +8,21 @@
                 deleteConfirm: false,
                 deleteId: null,
                 form: { id: null, code: '', name: '', price: '', stock: '' },
-                products: window.__products__ || [],
+                products: [],
                 search: '',
                 csrfToken: window.__csrf__,
+
+                async init() {
+                    try {
+                        const res = await fetch('/api/products');
+                        const json = await res.json();
+                        if (json.success) {
+                            this.products = json.data;
+                        }
+                    } catch (e) {
+                        console.error('Gagal mengambil data produk:', e);
+                    }
+                },
 
                 get filtered() {
                     if (!this.search) return this.products;
@@ -39,7 +51,7 @@
 
                 async save() {
                     if (!this.form.name || !this.form.price || !this.form.stock) return;
-                    const url    = this.editMode ? '/products/' + this.form.id : '/products';
+                    const url    = this.editMode ? '/api/products/' + this.form.id : '/api/products';
                     const method = this.editMode ? 'PUT' : 'POST';
                     try {
                         const res = await fetch(url, {
@@ -71,7 +83,7 @@
 
                 async doDelete() {
                     try {
-                        const res = await fetch('/products/' + this.deleteId, {
+                        const res = await fetch('/api/products/' + this.deleteId, {
                             method: 'DELETE',
                             headers: { 'X-CSRF-TOKEN': this.csrfToken }
                         });
@@ -87,9 +99,8 @@
         });
     </script>
 
-    {{-- Inject server-side data safely --}}
+    {{-- Inject CSRF token safely --}}
     <script>
-        window.__products__ = @json($products);
         window.__csrf__     = '{{ csrf_token() }}';
     </script>
 

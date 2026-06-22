@@ -7,8 +7,20 @@
                 selectedTrx: null,
                 deleteConfirm: false,
                 deleteId: null,
-                transactions: window.__transactions__ || [],
+                transactions: [],
                 csrfToken: window.__csrf__,
+
+                async init() {
+                    try {
+                        const res = await fetch('/api/transactions');
+                        const json = await res.json();
+                        if (json.success) {
+                            this.transactions = json.data;
+                        }
+                    } catch (e) {
+                        console.error('Gagal mengambil data transaksi:', e);
+                    }
+                },
 
                 formatRp(val) {
                     return 'IDR ' + Number(val).toLocaleString('id-ID').replace(/,/g, '.');
@@ -26,7 +38,7 @@
 
                 async doDelete() {
                     try {
-                        const res = await fetch('/transactions/' + this.deleteId, {
+                        const res = await fetch('/api/transactions/' + this.deleteId, {
                             method: 'DELETE',
                             headers: { 'X-CSRF-TOKEN': this.csrfToken }
                         });
@@ -46,9 +58,8 @@
         });
     </script>
 
-    {{-- Inject server-side data safely --}}
+    {{-- Inject CSRF token safely --}}
     <script>
-        window.__transactions__ = @json($transactions);
         window.__csrf__ = window.__csrf__ || '{{ csrf_token() }}';
     </script>
 

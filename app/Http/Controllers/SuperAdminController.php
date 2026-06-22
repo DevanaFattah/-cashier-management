@@ -10,16 +10,9 @@ use Illuminate\Support\Facades\Storage;
 
 class SuperAdminController extends Controller
 {
-    public function index (Shop $shop) 
+    public function index () 
     {
-        $settings = $shop->setting->name;
-
-        // $shop = Shop::first();
-
-        return view('settings.index', [
-            'settings' => $settings,
-            'shop' => $shop
-        ]);
+        return view('settings.index');
     }
 
     public function update(Request $request, Shop $shop)
