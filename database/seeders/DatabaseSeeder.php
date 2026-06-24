@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
         Shop::create([
             'name' => 'Toko Maju Jaya',
             'address' => 'Jl. Dr. Supomo No.23, Sriwedari, Kec. Laweyan, Kota Surakarta, Jawa Tengah 57141',
-            'path_logo' => 'dsadasdas',
+            'path_logo' => 'logos/default_logo.png',
             'setting_id' => 2
         ]);
 

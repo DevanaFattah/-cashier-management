@@ -40,9 +40,20 @@
 </head>
 <body>
 
+    @php
+        $logoBase64 = '';
+        if ($shop && $shop->path_logo) {
+            $logoPath = storage_path('app/public/' . $shop->path_logo);
+            if (file_exists($logoPath)) {
+                $logoData = base64_encode(file_get_contents($logoPath));
+                $logoBase64 = 'data:image/png;base64,' . $logoData;
+            }
+        }
+    @endphp
+
     <div class="header center">
-        @if($shop && $shop->path_logo && file_exists(public_path('storage/' . $shop->path_logo)))
-            <img src="{{ public_path('storage/' . $shop->path_logo) }}" class="logo" alt="Logo">
+        @if($logoBase64)
+            <img src="{{ $logoBase64 }}" class="logo" alt="Logo">
         @endif
         <div class="shop-name">{{ $shopName }}</div>
         <div class="shop-address">{{ $shopAddress }}</div>

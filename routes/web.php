@@ -41,7 +41,6 @@ Route::middleware('auth')->group(function () {
         Route::prefix('transactions')->name('transactions.')->group(function () {
             Route::get('/dashboard', [DashboardController::class, 'transactions'])->name('index');
             Route::post('/', [App\Http\Controllers\TransactionController::class, 'store'])->name('store');
-            Route::delete('/{transaction}', [App\Http\Controllers\TransactionController::class, 'destroy'])->name('destroy');
         });
     });
 
@@ -57,6 +56,7 @@ Route::middleware('auth')->group(function () {
     // --- SUPERADMIN ONLY MODULES ---
     Route::middleware('role:superadmin')->group(function () {
         Route::get('/users', [SuperAdminController::class, 'users'])->name('users.index');
+        Route::delete('/transactions/{transaction}', [App\Http\Controllers\TransactionController::class, 'destroy'])->name('transactions.destroy');
     });
 });
 

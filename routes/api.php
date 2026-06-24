@@ -24,6 +24,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Transactions
     Route::get('/transactions', [ApiController::class, 'getTransactions']);
     Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::post('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel']);
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy']);
 
     // Settings

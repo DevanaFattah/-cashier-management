@@ -111,15 +111,17 @@
                                     this.paymentDone = true;
                                     this.finishTransaction();
                                 },
-                                onPending: (result) => {
-                                    this.paymentDone = true;
-                                    this.finishTransaction();
+                                onPending: async (result) => {
+                                    alert('Pembayaran pending/tertunda. Silakan selesaikan pembayaran.');
+                                    await this.cancelTransaction(this.savedTrxId);
                                 },
-                                onError: (result) => {
+                                onError: async (result) => {
                                     alert('Pembayaran gagal: ' + result.status_message);
+                                    await this.cancelTransaction(this.savedTrxId);
                                 },
-                                onClose: () => {
-                                    alert('Pop-up pembayaran ditutup oleh pengguna.');
+                                onClose: async () => {
+                                    alert('Pop-up pembayaran ditutup oleh pengguna. Transaksi dibatalkan.');
+                                    await this.cancelTransaction(this.savedTrxId);
                                 }
                             });
                         } else {
@@ -134,6 +136,29 @@
                     } catch (err) {
                         console.error('Payment Error:', err);
                         alert('Terjadi kesalahan koneksi: ' + err.message);
+                    }
+                },
+
+                async cancelTransaction(transactionId) {
+                    if (!transactionId) return;
+                    try {
+                        const response = await fetch(`/api/transactions/${transactionId}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': this.csrfToken
+                            }
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            // Refresh product stocks list from API to reflect restored stock
+                            await this.init();
+                            this.showPayModal = false;
+                        } else {
+                            console.error('Gagal membatalkan transaksi:', data.message);
+                        }
+                    } catch (e) {
+                        console.error('Koneksi gagal saat membatalkan transaksi:', e);
                     }
                 },
 

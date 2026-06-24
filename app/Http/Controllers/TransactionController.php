@@ -92,6 +92,44 @@ class TransactionController extends Controller
         }
     }
 
+    public function cancel(Transaction $transaction)
+    {
+        if ($transaction->payment_status === 'settlement') {
+            return response()->json([
+                'message' => 'Transaksi yang sudah lunas tidak dapat dibatalkan'
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Restore product stocks
+            foreach ($transaction->details as $detail) {
+                $product = Product::lockForUpdate()->find($detail->product_id);
+                if ($product) {
+                    $product->increment('stock', $detail->qty);
+                }
+            }
+
+            // Update status to cancel
+            $transaction->update([
+                'payment_status' => 'cancel'
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil dibatalkan dan stok dikembalikan'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal membatalkan transaksi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy(Transaction $transaction)
     {
         // Delete transaction (cascades to details)

@@ -103,14 +103,27 @@ class ApiController extends Controller
     /**
      * Get list of transactions.
      */
-    public function getTransactions()
+    public function getTransactions(Request $request)
     {
-        $transactions = Transaction::with('details.product', 'user')->latest()->get();
+        $perPage = $request->input('per_page', 10);
+        $transactions = Transaction::with('details.product', 'user')
+            ->latest()
+            ->paginate($perPage);
+
+        // Calculate today's revenue (only count settled transactions or all non-cancelled ones depending on business needs. Here we count all except cancel/deny/expire)
+        $todayRevenue = Transaction::whereDate('created_at', today())
+            ->whereNotIn('payment_status', ['cancel', 'deny', 'expire'])
+            ->sum('grand_total');
 
         return response()->json([
             'success' => true,
             'message' => 'Daftar transaksi berhasil diambil',
-            'data' => $transactions
+            'data' => $transactions->items(),
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
+            'total' => $transactions->total(),
+            'per_page' => $transactions->perPage(),
+            'today_revenue' => $todayRevenue,
         ]);
     }
 
