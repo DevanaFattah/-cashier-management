@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: formdata
+  content:
+    - type: text
+      key: email
+      value: superadmin@kasir.app
+    - type: text
+      key: password
+      value: password
+scripts:
+  - type: afterResponse
+    code: |-
+      // Simpan token CSRF terbaru setelah login
+      var xsrfCookie = pm.cookies.get('XSRF-TOKEN');
+      if (xsrfCookie) {
+          pm.environment.set("csrf_token", decodeURIComponent(xsrfCookie));
+      }
+    language: text/javascript
+order: 2000

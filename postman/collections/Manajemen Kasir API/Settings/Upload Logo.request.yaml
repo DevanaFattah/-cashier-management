@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/api/settings/logo"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: formdata
+  content:
+    - type: file
+      key: logo
+      src:
+        - ""
+order: 4000

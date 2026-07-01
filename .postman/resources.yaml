@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: a8bff953-ae89-4fa8-9503-9a91c1af6c06
+
+localResources:
+  collections:
+    - ..\postman_collection.json
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ..\postman\collections\Manajemen Kasir API: 751190ac-bce9-49ab-99d1-41441eba0069

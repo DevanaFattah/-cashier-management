@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{base_url}}/api/products"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: formdata
+  content:
+    - type: text
+      key: code
+      value: PROD-001
+    - type: text
+      key: name
+      value: Kopi Susu Gula Aren
+    - type: text
+      key: price
+      value: "18000"
+    - type: text
+      key: stock
+      value: "50"
+order: 2000

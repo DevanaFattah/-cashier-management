@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/api/settings"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: urlencoded
+  content:
+    _method: PUT
+    name: Toko Roti Makmur
+    address: Jl. Mawar No. 45, Bandung
+order: 2000

@@ -1,0 +1,16 @@
+$kind: http-request
+description: Ambil CSRF Token sebagai JSON sebelum melakukan request POST/PUT/DELETE
+url: "{{base_url}}/csrf-token"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      // Ambil token CSRF dari JSON response
+      var jsonData = pm.response.json();
+      if (jsonData && jsonData.csrf_token) {
+          pm.environment.set("csrf_token", jsonData.csrf_token);
+      }
+    language: text/javascript
+order: 1000

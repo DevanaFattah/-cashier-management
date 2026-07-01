@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/settings/theme"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: urlencoded
+  content:
+    _method: PUT
+    theme: ocean
+order: 3000

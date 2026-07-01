@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/api/transactions/1"
+method: POST
+headers:
+  Accept: application/json
+  X-XSRF-TOKEN: "{{csrf_token}}"
+body:
+  type: urlencoded
+  content:
+    _method: DELETE
+order: 4000
