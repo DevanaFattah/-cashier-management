@@ -60,10 +60,11 @@ DB_PASSWORD=
 ```
 *Catatan: Buat database baru bernama `manajemen-kasir` di DBMS Anda (seperti phpMyAdmin atau Laragon).*
 
-Lalu, isi kredensial **Midtrans Sandbox** Anda ke bagian paling bawah berkas `.env` (Kredensial Sandbox ini dapat Anda temukan pada lampiran berkas terpisah atau menggunakan akun Midtrans Sandbox Anda sendiri):
+Lalu, isi kredensial **Midtrans Sandbox** di bawah ini ke bagian paling bawah berkas `.env`. 
+*(Catatan: Hapus tanda spasi setelah kata `Mid-server-` dan `Mid-client-` saat menyalinnya agar token menjadi valid)*:
 ```env
-MIDTRANS_SERVER_KEY=masukkan_server_key_sandbox_di_sini
-MIDTRANS_CLIENT_KEY=masukkan_client_key_sandbox_di_sini
+MIDTRANS_SERVER_KEY=Mid-server- tB9SpnqyRgUfJFLTFHYsmElU
+MIDTRANS_CLIENT_KEY=Mid-client- IIwof4jdg05gkBZb
 MIDTRANS_IS_PRODUCTION=false
 ```
 
