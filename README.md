@@ -25,7 +25,8 @@ Sebelum memulai instalasi, pastikan lingkungan kerja (server/komputer lokal) And
 - **Composer** (Dependency Manager untuk PHP)
 - **Node.js** >= 18 & **npm** (untuk build manager frontend Vite)
 - **MySQL** / **MariaDB** (sebagai database utama)
-- **Ekstensi PHP yang Wajib Aktif**:
+- **Ekstensi PHP yang Wajib Aktif**: 
+  - (Cek pada file php.ini lalu aktifkan setiap ekstensi di bawah (WAJIB))
   - `GD` (Diperlukan oleh DomPDF untuk merender/mencetak logo toko pada struk PDF)
   - `PDO_MySQL`
   - `BCMath`
