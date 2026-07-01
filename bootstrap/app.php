@@ -19,8 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Exclude Midtrans webhook from CSRF — security handled by signature key validation
+        // Exclude all /api/* routes — protected by session auth, not CSRF
+        // Exclude login route so Postman can authenticate easily
         $middleware->validateCsrfTokens(except: [
             'midtrans/notification',
+            'api/*',
+            'login',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

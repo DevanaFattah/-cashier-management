@@ -27,10 +27,7 @@ class AuthController extends Controller
         return view('pages.auth.login');
     }
 
-    /**
-     * Proses login.
-     */
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request)
     {
         $credentials = $request->validate([
             'email'    => ['required', 'email'],
@@ -49,9 +46,26 @@ class AuthController extends Controller
 
             $user = Auth::user();
             $redirectRoute = $user->role === 'kasir' ? 'kasir.dashboard' : 'dashboard';
+            $redirectUrl = route($redirectRoute);
 
-            return redirect()->intended(route($redirectRoute))
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil. Selamat datang kembali, ' . $user->name . '!',
+                    'redirect_url' => $redirectUrl,
+                    'user' => $user
+                ]);
+            }
+
+            return redirect()->intended($redirectUrl)
                 ->with('success', 'Selamat datang kembali, ' . $user->name . '!');
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau password yang Anda masukkan salah.'
+            ], 401);
         }
 
         return back()
@@ -64,12 +78,19 @@ class AuthController extends Controller
     /**
      * Proses logout.
      */
-    public function logout(Request $request): RedirectResponse
+    public function logout(Request $request)
     {
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Anda telah berhasil keluar.'
+            ]);
+        }
 
         return redirect()->route('login')
             ->with('success', 'Anda telah berhasil keluar.');

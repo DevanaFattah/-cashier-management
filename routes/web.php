@@ -16,11 +16,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
+// CSRF Token endpoint for Postman
+Route::get('/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+});
+
 Route::middleware('auth')->group(function () {
     // Logout is allowed for all authenticated users
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Receipts are allowed for cashier and superadmin (since they see POS and transactions)
+    // Receipts are allowed for cashier and superadmin (since they see POS and transactions)    
     Route::middleware('role:kasir,superadmin')->group(function () {
         Route::get('/receipt/{transaction}/download', [ReceiptController::class, 'download'])->name('receipt.download');
         Route::get('/receipt/{transaction}/preview',  [ReceiptController::class, 'preview'])->name('receipt.preview');
