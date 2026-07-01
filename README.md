@@ -60,6 +60,13 @@ DB_PASSWORD=
 ```
 *Catatan: Buat database baru bernama `manajemen-kasir` di DBMS Anda (seperti phpMyAdmin atau Laragon).*
 
+Lalu, isi kredensial **Midtrans Sandbox** Anda ke bagian paling bawah berkas `.env` (Kredensial Sandbox ini dapat Anda temukan pada lampiran berkas terpisah atau menggunakan akun Midtrans Sandbox Anda sendiri):
+```env
+MIDTRANS_SERVER_KEY=masukkan_server_key_sandbox_di_sini
+MIDTRANS_CLIENT_KEY=masukkan_client_key_sandbox_di_sini
+MIDTRANS_IS_PRODUCTION=false
+```
+
 ### 3. Pasang Dependensi Backend (Install Composer Packages)
 ```bash
 composer install
