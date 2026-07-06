@@ -138,6 +138,54 @@ Untuk mempermudah dosen/penguji dalam menilai fitur Role-Based Access Control, g
 
 ---
 
+## 💳 Integrasi Midtrans Payment Gateway
+
+Aplikasi ini dilengkapi dengan integrasi **Midtrans Snap API (Sandbox)** untuk memfasilitasi transaksi non-tunai (cashless) secara real-time seperti QRIS, Gopay, ShopeePay, dan Virtual Account Bank Transfer.
+
+### 🔄 Alur Transaksi & Pembayaran Digital
+Berikut adalah diagram alur bagaimana transaksi diproses oleh sistem POS, Backend Laravel, dan Midtrans:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Kasir as Kasir / Pembeli
+    participant POS as Cashier POS (Alpine.js)
+    participant Backend as Laravel Backend
+    participant Midtrans as Midtrans Snap API
+
+    Kasir->>POS: Klik Checkout (Pilih QRIS/VA)
+    POS->>Backend: POST /api/transactions
+    Note over Backend: Transaksi dibuat di DB (Status: pending)
+    Backend->>Midtrans: Request Snap Token (Kirim Rincian Produk)
+    Midtrans-->>Backend: Snap Token & Redirect URL
+    Backend-->>POS: JSON Response (Snap Token & Order ID)
+    POS->>Kasir: Tampilkan Snap Modal (Pop-up QRIS)
+    
+    rect rgb(240, 248, 255)
+        Note over Kasir, Midtrans: Proses Pembayaran (Simulasi QRIS/Transfer)
+        Kasir->>Midtrans: Bayar Tagihan
+    end
+
+    Midtrans->>Backend: Webhook Callback (POST /midtrans/notification)
+    Note over Backend: Verifikasi Signature Key & Update DB (Status: settlement)
+    Backend-->>Midtrans: HTTP 200 OK
+    
+    POS->>Backend: Cek status via Snap JS Handler / API
+    Backend-->>POS: Status Terupdate (settlement)
+    POS->>Kasir: Pembayaran Sukses! Buka Tab Baru Struk PDF
+```
+
+### ⚙️ Konfigurasi Berkas `.env`
+Pastikan kredensial sandbox berikut telah Anda tempatkan di bagian paling bawah berkas `.env` Anda:
+```env
+# Hapus spasi setelah tanda strip (-) saat menyalin ke .env
+MIDTRANS_SERVER_KEY=Mid-server- tB9SpnqyRgUfJFLTFHYsmElU
+MIDTRANS_CLIENT_KEY=Mid-client- IIwof4jdg05gkBZb
+MIDTRANS_IS_PRODUCTION=false
+```
+
+---
+
 ## 🧪 Pengujian API via Postman
 
 Aplikasi ini menyertakan file collection Postman untuk mempermudah pengujian REST API secara mandiri.
