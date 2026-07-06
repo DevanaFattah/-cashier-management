@@ -2,6 +2,15 @@
 
 Selamat datang di repositori **Manajemen Kasir**, sebuah sistem *Point of Sale* (POS) dan manajemen toko franchise yang dirancang dengan fleksibilitas tinggi. Aplikasi ini mengusung konsep **Hybrid Monolith** (Backend API-like dengan frontend Blade & Alpine.js), mendukung re-branding dinamis (penggantian nama toko, logo, dan tema warna langsung dari panel admin), manajemen transaksi, integrasi pembayaran digital, manajemen stok otomatis, serta cetak struk (Thermal 80mm & Invoice A4).
 
+<div align="left">
+    <img src="https://img.shields.io/badge/Midtrans-Integration--Ready-blue?style=for-the-badge&logo=visa&logoColor=white" alt="Midtrans Integration">
+    <img src="https://img.shields.io/badge/Laravel-11.x--Active-red?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 11.x">
+    <img src="https://img.shields.io/badge/Alpine.js-Interactive--UI-83b814?style=for-the-badge&logo=alpine.js&logoColor=white" alt="Alpine.js">
+</div>
+
+> [!IMPORTANT]
+> **💳 Integrasi Midtrans Sandbox:** Sistem POS ini siap menyimulasikan transaksi cashless secara real-time via QRIS & Virtual Account. Konfigurasi kredensial uji coba Anda dapat disalin pada [Bagian Konfigurasi Midtrans](#-integrasi-midtrans-payment-gateway).
+
 ---
 
 ## 📌 Fitur Utama Aplikasi
